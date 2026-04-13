@@ -1,0 +1,7 @@
+.git
+.drone.yml
+README.md
+__pycache__
+data
+config
+examples
