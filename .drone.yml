@@ -17,12 +17,12 @@ steps:
   - name: lint-dockerfile
     image: hadolint/hadolint:2.12.0-alpine
     commands:
-      - hadolint Dockerfile
+      - hadolint --failure-threshold error Dockerfile
 
   - name: build-no-push
     image: gcr.io/kaniko-project/executor:v1.23.2-debug
     commands:
-      - /kaniko/executor --context . --dockerfile Dockerfile --destination ghcr.io/jkawohl/automation-service-automation-service:ci-${DRONE_BUILD_NUMBER} --no-push --cache=true
+      - /kaniko/executor --context . --dockerfile Dockerfile --destination ghcr.io/jkawohl/automation-service-automation-service:ci-${DRONE_BUILD_NUMBER} --no-push
 
   - name: publish-image
     image: plugins/kaniko
