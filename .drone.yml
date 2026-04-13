@@ -1,0 +1,46 @@
+kind: pipeline
+type: docker
+name: automation-service-automation-service
+
+trigger:
+  event:
+    - push
+    - custom
+    - cron
+
+steps:
+  - name: dependency-scan
+    image: aquasec/trivy:0.51.2
+    commands:
+      - trivy config --severity HIGH,CRITICAL --exit-code 0 .
+
+  - name: lint-dockerfile
+    image: hadolint/hadolint:2.12.0-alpine
+    commands:
+      - hadolint Dockerfile
+
+  - name: build-no-push
+    image: gcr.io/kaniko-project/executor:v1.23.2-debug
+    commands:
+      - /kaniko/executor --context . --dockerfile Dockerfile --destination ghcr.io/jkawohl/automation-service-automation-service:ci-${DRONE_BUILD_NUMBER} --no-push --cache=true
+
+  - name: publish-image
+    image: plugins/kaniko
+    settings:
+      repo: ghcr.io/jkawohl/automation-service-automation-service
+      username:
+        from_secret: ghcr_username
+      password:
+        from_secret: ghcr_token
+      dockerfile: Dockerfile
+      context: .
+      tags:
+        - latest
+        - ${DRONE_COMMIT_SHA}
+    when:
+      event:
+        - push
+        - custom
+        - cron
+      branch:
+        - main
